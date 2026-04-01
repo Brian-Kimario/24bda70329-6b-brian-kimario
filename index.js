@@ -6,33 +6,25 @@ import authRoutes from './routes/auth.routes.js';
 import { loggerMiddleware } from './middleware/logger.middleware.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 
-const PORT = process.env.PORT || 3000;
+const app = express();
 
-async function boot() {
-  try {
-    await connectDB();
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(loggerMiddleware);
 
-    const app = express();
+// Routes
+app.use('/users', authRoutes);
 
-    app.use(cors());
-    app.use(express.json());
-    app.use(loggerMiddleware);
+app.get('/', (req, res) => {
+  res.json({ message: 'API is running' });
+});
 
-    app.use('/users', authRoutes);
+// Error handler
+app.use(errorMiddleware);
 
-    app.get('/', (req, res) => {
-      res.json({ message: 'API is running' });
-    });
-
-    app.use(errorMiddleware);
-
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error('Failed to boot app:', err);
-    process.exit(1);
-  }
+// IMPORTANT: connect DB for every invocation safely
+export default async function handler(req, res) {
+  await connectDB();
+  return app(req, res);
 }
-
-boot();
