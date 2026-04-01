@@ -23,7 +23,18 @@ app.get('/', (req, res) => {
 // Error handler
 app.use(errorMiddleware);
 
-// IMPORTANT: connect DB for every invocation safely
+// ✅ LOCAL DEVELOPMENT (runs only locally)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  });
+}
+
+// ✅ VERCEL SERVERLESS HANDLER
 export default async function handler(req, res) {
   await connectDB();
   return app(req, res);
